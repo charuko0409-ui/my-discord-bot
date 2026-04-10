@@ -42,7 +42,8 @@ async def send_heartbeat():
 @bot.event
 async def on_ready():
     print(f'✅ ボットがオンラインになりました！ ログイン名: {bot.user}')
-    
+        # 設定機器人狀態
+    await bot.change_presence(activity=discord.Game(name="Master Duel"))
     # 顯示機器人所在的所有伺服器
     print(f"\n機器人已加入以下 {len(bot.guilds)} 個伺服器：")
     for guild in bot.guilds:
