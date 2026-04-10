@@ -1,9 +1,10 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import math
 from fractions import Fraction
 import re
 import os
+import asyncio
 
 # ================== 設定 ==================
 intents = discord.Intents.default()
@@ -11,18 +12,33 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# ================== 防休眠功能 ==================
+# 設定要傳送心跳訊息的頻道 ID
+# 請把下面的數字改成你的頻道 ID
+HEARTBEAT_CHANNEL_ID = 1491740162441478207  # ⚠️ 改成你的頻道ID！
+
+@tasks.loop(minutes=5)  # 每5分鐘執行一次
+async def heartbeat():
+    """定時發送心跳訊息，防止 Railway 讓機器人休眠"""
+    channel = bot.get_channel(HEARTBEAT_CHANNEL_ID)
+    if channel:
+        await channel.send("💓 ボットは稼働中です！")  # 可改成任何訊息
+        print(f"心跳發送成功！時間: {discord.utils.utcnow()}")
+
+@heartbeat.before_loop
+async def before_heartbeat():
+    """等待機器人完全啟動後才開始發送心跳"""
+    await bot.wait_until_ready()
+
+# ================== 原本的機器人指令 ==================
 @bot.event
 async def on_ready():
     print(f'✅ ボットがオンラインになりました！ ログイン名: {bot.user}')
+    # 啟動心跳任務
+    heartbeat.start()
 
 @bot.command(name='prob')
 async def probability(ctx, *, arg: str):
-    # 対応形式：
-    # !prob 14 >= 7
-    # !prob 14 <= 5
-    # !prob 14 = 3
-    # !prob 14 3 (省略形、等しい)
-    
     numbers = re.findall(r'\d+', arg)
     if len(numbers) < 2:
         await ctx.send("❌ 使い方：\n`!prob 14 >= 7`\n`!prob 14 <= 5`\n`!prob 14 = 3`\n`!prob 14 3`")
@@ -80,5 +96,5 @@ async def probability(ctx, *, arg: str):
     
     await ctx.send(response)
 
-# ================== 啟動 ==================
+# ================== 起動 ==================
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
