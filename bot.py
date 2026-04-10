@@ -6,37 +6,37 @@ import re
 import os
 import asyncio
 
-# ================== 設定 ==================
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # ================== 防休眠功能 ==================
-# 設定要傳送心跳訊息的頻道 ID
-# 請把下面的數字改成你的頻道 ID
-HEARTBEAT_CHANNEL_ID = 1491740162441478207  # ⚠️ 改成你的頻道ID！
+# ⚠️ 改成你的頻道 ID（純數字，不要引號）
+HEARTBEAT_CHANNEL_ID = 1491740162441478207
 
-@tasks.loop(minutes=5)  # 每5分鐘執行一次
-async def heartbeat():
-    """定時發送心跳訊息，防止 Railway 讓機器人休眠"""
-    channel = bot.get_channel(HEARTBEAT_CHANNEL_ID)
-    if channel:
-        await channel.send("💓 ボットは稼働中です！")  # 可改成任何訊息
-        print(f"心跳發送成功！時間: {discord.utils.utcnow()}")
+async def send_heartbeat():
+    """發送心跳訊息"""
+    try:
+        channel = bot.get_channel(HEARTBEAT_CHANNEL_ID)
+        if channel:
+            await channel.send("💓 ボットは稼働中です！")
+            print(f"✅ 心跳發送成功 - {discord.utils.utcnow()}")
+        else:
+            print(f"❌ 找不到頻道！ID: {HEARTBEAT_CHANNEL_ID}")
+    except Exception as e:
+        print(f"❌ 心跳發送失敗: {e}")
 
-@heartbeat.before_loop
-async def before_heartbeat():
-    """等待機器人完全啟動後才開始發送心跳"""
-    await bot.wait_until_ready()
-
-# ================== 原本的機器人指令 ==================
 @bot.event
 async def on_ready():
     print(f'✅ ボットがオンラインになりました！ ログイン名: {bot.user}')
-    # 啟動心跳任務
-    heartbeat.start()
+    
+    # 啟動心跳循環（每5分鐘）
+    while True:
+        await send_heartbeat()
+        await asyncio.sleep(300)  # 300秒 = 5分鐘
 
+# ================== 你的 !prob 指令 ==================
 @bot.command(name='prob')
 async def probability(ctx, *, arg: str):
     numbers = re.findall(r'\d+', arg)
@@ -92,6 +92,7 @@ async def probability(ctx, *, arg: str):
         f"**X + Y + Z = {N} かつ {cond_str} の確率**\n"
         f"組み合わせ数：{favorable} / {total}\n"
         f"確率：`{prob_frac}` = `{prob_float:.4f}`（{percent:.2f}%）\n\n"
+        
     )
     
     await ctx.send(response)
