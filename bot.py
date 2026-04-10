@@ -12,7 +12,7 @@ intents.guilds = True  # 確保可以讀取伺服器資訊
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-HEARTBEAT_CHANNEL_ID = 1491740162441478207  # 你的頻道ID
+HEARTBEAT_CHANNEL_ID = 1491740163246915666  # 你的頻道ID
 
 async def send_heartbeat():
     """發送心跳訊息並顯示除錯資訊"""
