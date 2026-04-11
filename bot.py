@@ -377,6 +377,16 @@ async def delete_score(ctx, player: str):
     else:
         await ctx.send(f"❌ `{player}` は見つかりません。")
 
+# 指令：查詢選手成績
+@bot.command(name='score', aliases=['search'])
+async def get_score(ctx, player: str):
+    """查詢選手成績 用法: !score 選手名 或 !search 選手名"""
+    scores = load_scores()
+    if player in scores:
+        await ctx.send(f"📊 `{player}` の成績: **{scores[player]}**")
+    else:
+        await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
+
 
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
