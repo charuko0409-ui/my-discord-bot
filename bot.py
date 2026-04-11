@@ -78,7 +78,7 @@ async def help_command(ctx):
         inline=False
     )
 
-        embed.add_field(
+    embed.add_field(
         name="🎲 シミュレーション",
         value="`!simulate N 条件 Z 回数`\n例: `!simulate 14 = 3 10000`\n"
               "例: `!simulate 14 >= 7 50000`",
