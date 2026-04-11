@@ -25,7 +25,7 @@ async def send_heartbeat():
             channel = guild.get_channel(HEARTBEAT_CHANNEL_ID)
             if channel:
                 print(f"    ✅ 找到目標頻道！頻道名稱: {channel.name}")
-                await channel.send("💓 ボットは稼働中です！")
+                await channel.send("💓 working！")
                 print("✅ 心跳發送成功")
                 return
         
@@ -55,6 +55,34 @@ async def on_ready():
         await asyncio.sleep(420)  # 7 min
 
 # ================== 你的 !prob 指令 ==================
+@bot.command(name='help')
+async def help_command(ctx):
+    """顯示所有指令列表"""
+    embed = discord.Embed(
+        title="📊 クリスタル計算機 - ヘルプ",
+        description="X+Y+Z = N のとき、Zの確率を計算します",
+        color=0x00ff00
+    )
+    
+    embed.add_field(
+        name="🎲 單一Z值確率",
+        value="`!prob N = Z`\n例: `!prob 14 = 3`\n\n"
+              "`!prob N >= Z`\n例: `!prob 14 >= 7`\n\n"
+              "`!prob N <= Z`\n例: `!prob 14 <= 5`",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="📋 全Z值一覧（表格）",
+        value="`!prob N table`\n例: `!prob 14 table`",
+        inline=False
+    )
+    
+    embed.set_footer(text="Shadowverse ダメージ計算用 | 作成者：X@mikasuke_0308 ")
+    
+    await ctx.send(embed=embed)
+
+
 @bot.command(name='prob')
 async def probability(ctx, *, arg: str):
     # 支援格式：
