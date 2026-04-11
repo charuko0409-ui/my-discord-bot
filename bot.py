@@ -81,7 +81,111 @@ async def help_command(ctx):
     embed.set_footer(text="Shadowverse ダメージ計算用 | 作成者：X@mikasuke_0308 ")
     
     await ctx.send(embed=embed)
-
+@bot.command(name='simulate')
+async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
+    """
+    X+Y+Z = N のランダムシミュレーションで確率を検証
+    
+    使い方：
+    !simulate 14 = 3        (デフォルト10000回)
+    !simulate 14 >= 7 50000 (50000回)
+    !simulate 14 <= 5 20000 (20000回)
+    """
+    
+    import random
+    import time
+    
+    # シミュレーション回数の制限
+    if trials > 100000:
+        await ctx.send("⚠️ シミュレーション回数の上限は100,000回です。自動調整しました。")
+        trials = 100000
+    elif trials < 100:
+        await ctx.send("⚠️ シミュレーション回数は最低100回です。自動調整しました。")
+        trials = 100
+    
+    # 条件の解析
+    if condition not in ['=', '>=', '<=']:
+        await ctx.send("❌ 条件は =, >=, <= を使用してください")
+        return
+    
+    if N < 0:
+        await ctx.send("❌ N は 0 以上である必要があります")
+        return
+    
+    if condition == '=' and (Z < 0 or Z > N):
+        await ctx.send(f"❌ Z は 0～{N} の間である必要があります")
+        return
+    
+    # 理論確率の計算
+    total = math.comb(N + 2, 2)
+    
+    if condition == '=':
+        favorable_theory = N - Z + 1
+        cond_str = f"Z = {Z}"
+    elif condition == '>=':
+        if Z > N:
+            favorable_theory = 0
+        else:
+            favorable_theory = sum(N - z + 1 for z in range(Z, N + 1))
+        cond_str = f"Z ≥ {Z}"
+    else:  # '<='
+        if Z < 0:
+            favorable_theory = 0
+        else:
+            favorable_theory = sum(N - z + 1 for z in range(0, min(Z, N) + 1))
+        cond_str = f"Z ≤ {Z}"
+    
+    prob_theory = favorable_theory / total
+    
+    # シミュレーション開始
+    await ctx.send(f"🎲 シミュレーション中...（{trials:,}回）")
+    start_time = time.time()
+    
+    count = 0
+    for _ in range(trials):
+        # X, Y, Z をランダムに生成
+        z = random.randint(0, N)
+        remaining = N - z
+        x = random.randint(0, remaining)
+        y = remaining - x
+        
+        # 条件チェック
+        if condition == '=':
+            if z == Z:
+                count += 1
+        elif condition == '>=':
+            if z >= Z:
+                count += 1
+        else:  # '<='
+            if z <= Z:
+                count += 1
+    
+    prob_sim = count / trials
+    elapsed = time.time() - start_time
+    
+    # 誤差計算
+    error = abs(prob_sim - prob_theory)
+    error_percent = (error / prob_theory) * 100 if prob_theory > 0 else 0
+    
+    # 結果出力
+    response = (
+        f"**📊 シミュレーション結果：X+Y+Z = {N} かつ {cond_str}**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🎲 シミュレーション回数：**{trials:,}**回\n"
+        f"✅ 条件一致回数：**{count:,}**回\n"
+        f"⏱️ 処理時間：**{elapsed*1000:.0f}ms**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📐 **シミュレーション確率**：`{prob_sim:.4f}`（{prob_sim*100:.2f}%）\n"
+        f"📐 **理論確率**：`{prob_theory:.4f}`（{prob_theory*100:.2f}%）\n"
+        f"📐 **誤差**：`{error:.6f}`（{error_percent:.2f}%）\n"
+    )
+    
+    if error_percent < 5:
+        response += f"\n✅ シミュレーションは理論値と一致しています！"
+    else:
+        response += f"\n⚠️ 誤差が大きいです。シミュレーション回数を増やしてください。"
+    
+    await ctx.send(response)
 
 @bot.command(name='prob')
 async def probability(ctx, *, arg: str):
