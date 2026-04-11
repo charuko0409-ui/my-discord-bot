@@ -72,6 +72,15 @@ async def on_ready():
         await asyncio.sleep(420)  # 7 min
 
 # ================== 你的 !prob 指令 ==================
+# 指令：新增/更新選手成績
+@bot.command(name='addscore')
+async def add_score(ctx, player: str, score: str):
+    """新增或更新選手成績 用法: !addscore 選手名 成績"""
+    scores = load_scores()
+    scores[player] = score
+    save_scores(scores)
+    await ctx.send(f"✅ `{player}` の成績を `{score}` に登録しました！")
+
 @bot.command(name='helpc')
 async def help_command(ctx):
     """Display all command"""
