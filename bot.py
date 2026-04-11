@@ -52,7 +52,7 @@ async def on_ready():
     # 啟動心跳循環（每5分鐘）
     while True:
         await send_heartbeat()
-        await asyncio.sleep(300)  # 5分鐘
+        await asyncio.sleep(420)  # 7 min
 
 # ================== 你的 !prob 指令 ==================
 @bot.command(name='prob')
@@ -62,7 +62,7 @@ async def probability(ctx, *, arg: str):
     # !prob 14 <= 5
     # !prob 14 = 3
     # !prob 14 3
-    # !prob 14 table  ← 新增！顯示所有 Z 的機率表
+    # !prob 14 table  ← new z table
     
     arg_lower = arg.lower().strip()
     numbers = re.findall(r'\d+', arg)
@@ -74,12 +74,12 @@ async def probability(ctx, *, arg: str):
     try:
         N = int(numbers[0])
         
-        # 檢查是否為 table 模式
+        # table mode
         if 'table' in arg_lower:
             await show_table(ctx, N)
             return
         
-        # 一般的機率計算模式
+        # chance calculate
         if len(numbers) < 2:
             await ctx.send("❌ 使い方：\n`!prob 14 >= 7`\n`!prob 14 = 3`\n`!prob 14 table`")
             return
@@ -137,7 +137,7 @@ async def probability(ctx, *, arg: str):
 
 
 async def show_table(ctx, n: int):
-    """顯示所有 Z 值的機率表（簡化版）"""
+    """display z table"""
     
     if n < 0:
         await ctx.send("❌ 合計は0以上である必要があります！")
@@ -148,7 +148,6 @@ async def show_table(ctx, n: int):
     
     total = math.comb(n + 2, 2)
     
-    # 建立表格（不顯示組合數）
     result = f"**X + Y + Z = {n} の確率分布表**\n```\n"
     result += " Z │   確率   │  百分率\n"
     result += "───┼──────────┼─────────\n"
@@ -157,10 +156,9 @@ async def show_table(ctx, n: int):
         favorable = n - z + 1
         prob = favorable / total
         percent = prob * 100
-        
         result += f"{z:2} │ {prob:.4f} │ {percent:6.2f}%\n"
         
-        # 避免單一訊息太長
+        # 避免訊息太長
         if len(result) > 1500 and z < n:
             result += "```\n（続きは次のメッセージへ...）"
             await ctx.send(result)
@@ -169,15 +167,6 @@ async def show_table(ctx, n: int):
             result += "───┼──────────┼─────────\n"
     
     result += "```"
-    
-    # 統計摘要
-    max_prob = (n - 0 + 1) / total
-    min_prob = (n - n + 1) / total
-    
-    result += f"\n📊 **統計摘要**\n"
-    result += f"• 最大確率: Z = 0 （{max_prob:.4f} / {max_prob*100:.2f}%）\n"
-    result += f"• 最小確率: Z = {n} （{min_prob:.4f} / {min_prob*100:.2f}%）\n"
-    
     await ctx.send(result)
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
