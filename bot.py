@@ -77,6 +77,13 @@ async def help_command(ctx):
         value="`!prob N table`\n例: `!prob 14 table`",
         inline=False
     )
+
+        embed.add_field(
+        name="🎲 シミュレーション",
+        value="`!simulate N 条件 Z 回数`\n例: `!simulate 14 = 3 10000`\n"
+              "例: `!simulate 14 >= 7 50000`",
+        inline=False
+    )
     
     embed.set_footer(text="Shadowverse ダメージ計算用 | 作成者：X@mikasuke_0308 ")
     
