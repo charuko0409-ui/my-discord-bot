@@ -83,37 +83,20 @@ async def help_command(ctx):
     await ctx.send(embed=embed)
 @bot.command(name='simulate')
 async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
-    """
-    X+Y+Z = N のランダムシミュレーションで確率を検証
-    
-    使い方：
-    !simulate 14 = 3        (デフォルト10000回)
-    !simulate 14 >= 7 50000 (50000回)
-    !simulate 14 <= 5 20000 (20000回)
-    """
-    
     import random
     import time
     
-    # シミュレーション回数の制限
     if trials > 100000:
-        await ctx.send("⚠️ シミュレーション回数の上限は100,000回です。自動調整しました。")
         trials = 100000
     elif trials < 100:
-        await ctx.send("⚠️ シミュレーション回数は最低100回です。自動調整しました。")
         trials = 100
     
-    # 条件の解析
     if condition not in ['=', '>=', '<=']:
         await ctx.send("❌ 条件は =, >=, <= を使用してください")
         return
     
     if N < 0:
         await ctx.send("❌ N は 0 以上である必要があります")
-        return
-    
-    if condition == '=' and (Z < 0 or Z > N):
-        await ctx.send(f"❌ Z は 0～{N} の間である必要があります")
         return
     
     # 理論確率の計算
@@ -128,7 +111,7 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
         else:
             favorable_theory = sum(N - z + 1 for z in range(Z, N + 1))
         cond_str = f"Z ≥ {Z}"
-    else:  # '<='
+    else:
         if Z < 0:
             favorable_theory = 0
         else:
@@ -137,37 +120,47 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
     
     prob_theory = favorable_theory / total
     
-    # シミュレーション開始
     await ctx.send(f"🎲 シミュレーション中...（{trials:,}回）")
     start_time = time.time()
     
     count = 0
+    
+    # 修正：直接均勻選取所有 (X,Y,Z) 組合
+    # 方法：將所有組合視為從 0 到 total-1 的整數，再映射回 (X,Y,Z)
     for _ in range(trials):
-        # X, Y, Z をランダムに生成
-        z = random.randint(0, N)
-        remaining = N - z
-        x = random.randint(0, remaining)
-        y = remaining - x
+        # 隨機選取一個組合編號（0 到 total-1）
+        combo_num = random.randint(0, total - 1)
         
-        # 条件チェック
+        # 將組合編號轉換成 (X,Y,Z)
+        # 先找 Z：Z 對應的起始編號 = C(N+2,2) - C(N-Z+2,2)
+        z = 0
+        remaining = total
+        for z_candidate in range(N + 1):
+            count_for_z = N - z_candidate + 1
+            if combo_num < count_for_z:
+                z = z_candidate
+                break
+            else:
+                combo_num -= count_for_z
+        
+        # 再找 X（Y = 剩餘）
+        x = combo_num
+        y = N - z - x
+        
+        # 條件チェック
         if condition == '=':
             if z == Z:
                 count += 1
         elif condition == '>=':
             if z >= Z:
                 count += 1
-        else:  # '<='
+        else:
             if z <= Z:
                 count += 1
     
     prob_sim = count / trials
     elapsed = time.time() - start_time
     
-    # 誤差計算
-    error = abs(prob_sim - prob_theory)
-    error_percent = (error / prob_theory) * 100 if prob_theory > 0 else 0
-    
-    # 結果出力
     response = (
         f"**📊 シミュレーション結果：X+Y+Z = {N} かつ {cond_str}**\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -177,10 +170,7 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📐 **シミュレーション確率**：`{prob_sim:.4f}`（{prob_sim*100:.2f}%）\n"
         f"📐 **理論確率**：`{prob_theory:.4f}`（{prob_theory*100:.2f}%）\n"
-        
     )
-    
-    
     
     await ctx.send(response)
 
