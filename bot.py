@@ -12,7 +12,10 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True  # server read
 # 成績檔案路徑
-SCORE_FILE = "scores.json"
+if os.getenv('RAILWAY_VOLUME_MOUNT_PATH'):
+    SCORE_FILE = os.path.join(os.getenv('RAILWAY_VOLUME_MOUNT_PATH'), 'scores.json')
+else:
+    SCORE_FILE = 'scores.json'
 
 # 讀取成績資料
 def load_scores():
