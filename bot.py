@@ -180,10 +180,7 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
         f"📐 **誤差**：`{error:.6f}`（{error_percent:.2f}%）\n"
     )
     
-    if error_percent < 5:
-        response += f"\n✅ シミュレーションは理論値と一致しています！"
-    else:
-        response += f"\n⚠️ 誤差が大きいです。シミュレーション回数を増やしてください。"
+    
     
     await ctx.send(response)
 
