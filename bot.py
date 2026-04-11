@@ -5,10 +5,27 @@ from fractions import Fraction
 import re
 import os
 import asyncio
+import json
+
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True  # server read
+# 成績檔案路徑
+SCORE_FILE = "scores.json"
+
+# 讀取成績資料
+def load_scores():
+    if os.path.exists(SCORE_FILE):
+        with open(SCORE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+# 儲存成績資料
+def save_scores(scores):
+    with open(SCORE_FILE, "w", encoding="utf-8") as f:
+        json.dump(scores, f, ensure_ascii=False, indent=2)
+
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
@@ -294,5 +311,62 @@ async def show_table(ctx, n: int):
     
     result += "```"
     await ctx.send(result)
+# 指令：新增/更新選手成績
+@bot.command(name='addscore')
+@commands.has_permissions(administrator=True)
+async def add_score(ctx, player: str, score: str):
+    """新增或更新選手成績 用法: !addscore 選手名 成績"""
+    scores = load_scores()
+    scores[player] = score
+    save_scores(scores)
+    await ctx.send(f"✅ `{player}` の成績を `{score}` に登録しました！")
+
+# 指令：查詢選手成績
+@bot.command(name='score')
+async def get_score(ctx, player: str):
+    """查詢選手成績 用法: !score 選手名"""
+    scores = load_scores()
+    if player in scores:
+        await ctx.send(f"📊 `{player}` の成績: **{scores[player]}**")
+    else:
+        await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
+
+# 指令：刪除選手成績
+@bot.command(name='delscore')
+@commands.has_permissions(administrator=True)
+async def delete_score(ctx, player: str):
+    """刪除選手成績 用法: !delscore 選手名"""
+    scores = load_scores()
+    if player in scores:
+        del scores[player]
+        save_scores(scores)
+        await ctx.send(f"🗑️ `{player}` の成績を削除しました。")
+    else:
+        await ctx.send(f"❌ `{player}` は見つかりません。")
+
+# 指令：顯示所有選手成績
+@bot.command(name='allscore')
+async def all_scores(ctx):
+    """顯示所有選手成績"""
+    scores = load_scores()
+    if not scores:
+        await ctx.send("📭 まだ成績は登録されていません。")
+        return
+    
+    # 排序後輸出
+    sorted_items = sorted(scores.items())
+    message = "**📊 選手成績一覧**\n"
+    for player, score in sorted_items:
+        message += f"• {player}: {score}\n"
+    
+    # 避免訊息過長（Discord 限制 2000 字）
+    if len(message) > 1900:
+        await ctx.send("⚠️ 選手が多すぎるため、一部のみ表示します。")
+        # 可以只顯示前 20 筆
+        message = "**📊 選手成績一覧（一部）**\n"
+        for player, score in sorted_items[:20]:
+            message += f"• {player}: {score}\n"
+    
+    await ctx.send(message)
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
