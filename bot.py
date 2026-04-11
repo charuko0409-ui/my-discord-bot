@@ -137,7 +137,7 @@ async def probability(ctx, *, arg: str):
 
 
 async def show_table(ctx, n: int):
-    """顯示所有 Z 值的機率表（內部函數）"""
+    """顯示所有 Z 值的機率表（簡化版）"""
     
     if n < 0:
         await ctx.send("❌ 合計は0以上である必要があります！")
@@ -148,38 +148,35 @@ async def show_table(ctx, n: int):
     
     total = math.comb(n + 2, 2)
     
-    # 建立表格
+    # 建立表格（不顯示組合數）
     result = f"**X + Y + Z = {n} の確率分布表**\n```\n"
-    result += " Z │ 組合せ数 │   確率   │  百分率\n"
-    result += "───┼──────────┼──────────┼─────────\n"
+    result += " Z │   確率   │  百分率\n"
+    result += "───┼──────────┼─────────\n"
     
     for z in range(n + 1):
         favorable = n - z + 1
         prob = favorable / total
         percent = prob * 100
         
-        result += f"{z:2} │ {favorable:8} │ {prob:.4f} │ {percent:6.2f}%\n"
+        result += f"{z:2} │ {prob:.4f} │ {percent:6.2f}%\n"
         
-        # 避免單一訊息太長（Discord 限制 2000 字）
+        # 避免單一訊息太長
         if len(result) > 1500 and z < n:
             result += "```\n（続きは次のメッセージへ...）"
             await ctx.send(result)
             result = f"**続き（Z = {z+1} から）**\n```\n"
-            result += " Z │ 組合せ数 │   確率   │  百分率\n"
-            result += "───┼──────────┼──────────┼─────────\n"
+            result += " Z │   確率   │  百分率\n"
+            result += "───┼──────────┼─────────\n"
     
     result += "```"
     
-    # 加上統計摘要
-    max_z = n
-    min_z = 0
-    max_prob = (n - min_z + 1) / total
-    min_prob = (n - max_z + 1) / total
+    # 統計摘要
+    max_prob = (n - 0 + 1) / total
+    min_prob = (n - n + 1) / total
     
     result += f"\n📊 **統計摘要**\n"
-    result += f"• 最大確率: Z = {min_z} （{max_prob:.4f} / {max_prob*100:.2f}%）\n"
-    result += f"• 最小確率: Z = {max_z} （{min_prob:.4f} / {min_prob*100:.2f}%）\n"
-    result += f"• 總組合數: {total}"
+    result += f"• 最大確率: Z = 0 （{max_prob:.4f} / {max_prob*100:.2f}%）\n"
+    result += f"• 最小確率: Z = {n} （{min_prob:.4f} / {min_prob*100:.2f}%）\n"
     
     await ctx.send(result)
 
