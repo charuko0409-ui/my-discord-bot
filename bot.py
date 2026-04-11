@@ -177,7 +177,7 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📐 **シミュレーション確率**：`{prob_sim:.4f}`（{prob_sim*100:.2f}%）\n"
         f"📐 **理論確率**：`{prob_theory:.4f}`（{prob_theory*100:.2f}%）\n"
-        f"📐 **誤差**：`{error:.6f}`（{error_percent:.2f}%）\n"
+        
     )
     
     
