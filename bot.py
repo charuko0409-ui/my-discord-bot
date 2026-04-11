@@ -6,12 +6,17 @@ import re
 import os
 import asyncio
 
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True  # 確保可以讀取伺服器資訊
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-
+SHUKI_SONG = {
+    "name": "自己肯定感爆上げ↑↑しゅきしゅきソング",
+    "artist": "你的推",
+    "url": "https://www.youtube.com/watch?v=WCDLyXJgbIo
+}
 HEARTBEAT_CHANNEL_ID = 1491740163246915666  # 你的頻道ID
 
 async def send_heartbeat():
@@ -53,6 +58,17 @@ async def on_ready():
     while True:
         await send_heartbeat()
         await asyncio.sleep(420)  # 7 min
+
+@bot.command(name='song')
+async def recommend_song(ctx, *, user_request: str = None):
+    request = user_request or "隨便"
+    await ctx.send(
+        f"你說「{request}」？\n"
+        f"✨ **推薦你這首！** ✨\n"
+        f"**{SHUKI_SONG['name']}**\n"
+        f"🎤 {SHUKI_SONG['artist']}\n"
+        f"🔗 {SHUKI_SONG['url']}"
+    )
 
 # ================== 你的 !prob 指令 ==================
 @bot.command(name='helpc')
