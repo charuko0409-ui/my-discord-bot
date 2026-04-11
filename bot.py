@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 SHUKI_SONG = {
     "name": "自己肯定感爆上げ↑↑しゅきしゅきソング",
     "artist": "你的推",
-    "url": "https://www.youtube.com/watch?v=WCDLyXJgbIo
+    "url": "https://www.youtube.com/watch?v=WCDLyXJgbIo"
 }
 HEARTBEAT_CHANNEL_ID = 1491740163246915666  # 你的頻道ID
 
