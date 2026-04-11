@@ -8,25 +8,25 @@ import asyncio
 
 intents = discord.Intents.default()
 intents.message_content = True
-intents.guilds = True  # 確保可以讀取伺服器資訊
+intents.guilds = True  # server read
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-HEARTBEAT_CHANNEL_ID = 1491740163246915666  # 你的頻道ID
+HEARTBEAT_CHANNEL_ID = 1491740163246915666  # channal ID
 
 async def send_heartbeat():
-    """發送心跳訊息並顯示除錯資訊"""
+    """Display message check"""
     try:
-        # 檢查機器人看到了哪些伺服器
+        # checking server
         print(f"機器人在 {len(bot.guilds)} 個伺服器中")
         for guild in bot.guilds:
             print(f"  - 伺服器: {guild.name} (ID: {guild.id})")
-            # 檢查這個伺服器裡有沒有目標頻道
+            # check whether bot is in destinated channel
             channel = guild.get_channel(HEARTBEAT_CHANNEL_ID)
             if channel:
                 print(f"    ✅ 找到目標頻道！頻道名稱: {channel.name}")
                 await channel.send("💓 working！")
-                print("✅ 心跳發送成功")
+                print("✅ message sent")
                 return
         
         # 如果找不到頻道
@@ -42,14 +42,14 @@ async def send_heartbeat():
 @bot.event
 async def on_ready():
     print(f'✅ ボットがオンラインになりました！ ログイン名: {bot.user}')
-        # 設定機器人狀態
-    await bot.change_presence(activity=discord.Game(name="Master Duel"))
-    # 顯示機器人所在的所有伺服器
+        # set bot activity
+    await bot.change_presence(activity=discord.Game(name="Shadowverse: Worlds Beyond"))
+    # display bot server
     print(f"\n機器人已加入以下 {len(bot.guilds)} 個伺服器：")
     for guild in bot.guilds:
         print(f"  - {guild.name} (ID: {guild.id})")
     
-    # 啟動心跳循環（每5分鐘）
+    # ping
     while True:
         await send_heartbeat()
         await asyncio.sleep(420)  # 7 min
@@ -57,7 +57,7 @@ async def on_ready():
 # ================== 你的 !prob 指令 ==================
 @bot.command(name='helpc')
 async def help_command(ctx):
-    """顯示所有指令列表"""
+    """Display all command"""
     embed = discord.Embed(
         title="📊 クリスタル計算機 - ヘルプ",
         description="X+Y+Z = N のとき、Zの確率を計算します",
