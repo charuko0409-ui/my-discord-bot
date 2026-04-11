@@ -312,24 +312,45 @@ async def show_table(ctx, n: int):
     result += "```"
     await ctx.send(result)
 # 指令：新增/更新選手成績
-@bot.command(name='addscore')
-@commands.has_permissions(administrator=True)
-async def add_score(ctx, player: str, score: str):
-    """新增或更新選手成績 用法: !addscore 選手名 成績"""
+@bot.command(name='allscore')
+async def all_scores(ctx):
+    """顯示所有選手成績（依成績排序：勝場高→低，同勝場時敗場低→高）"""
     scores = load_scores()
-    scores[player] = score
-    save_scores(scores)
-    await ctx.send(f"✅ `{player}` の成績を `{score}` に登録しました！")
+    if not scores:
+        await ctx.send("📭 まだ成績は登録されていません。")
+        return
 
-# 指令：查詢選手成績
-@bot.command(name='score')
-async def get_score(ctx, player: str):
-    """查詢選手成績 用法: !score 選手名"""
-    scores = load_scores()
-    if player in scores:
-        await ctx.send(f"📊 `{player}` の成績: **{scores[player]}**")
-    else:
-        await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
+    # 自訂排序鍵函式
+    def sort_key(item):
+        player, score = item
+        # 嘗試解析成績格式 "X-Y"（例如 6-0）
+        if '-' in score:
+            parts = score.split('-')
+            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                wins = int(parts[0])
+                losses = int(parts[1])
+                # 回傳 (勝場數, 負場數) 但負場數要越小越好，所以用負號或反轉
+                # 先比勝場（降序），再比敗場（升序）
+                return (-wins, losses)
+        # 非「數字-數字」格式（例如優勝、ベスト8）放到最後，可自行設定順序
+        # 這裡統一放在最後，並用原字串排序
+        return (float('inf'), score)  # inf 確保排在後面
+
+    sorted_items = sorted(scores.items(), key=sort_key)
+
+    message = "**📊 選手成績一覧（勝率順）**\n"
+    for player, score in sorted_items:
+        message += f"• {player}: {score}\n"
+        if len(message) > 1900:
+            await ctx.send("⚠️ 選手が多すぎるため、一部のみ表示します。")
+            message = "**📊 選手成績一覧（続き）**\n"
+            for player, score in sorted_items[20:]:
+                message += f"• {player}: {score}\n"
+                if len(message) > 1900:
+                    break
+            break
+
+    await ctx.send(message)
 
 # 指令：刪除選手成績
 @bot.command(name='delscore')
