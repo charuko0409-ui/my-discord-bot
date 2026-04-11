@@ -16,9 +16,10 @@ SCORE_FILE = "scores.json"
 
 # 讀取成績資料
 def load_scores():
-    if os.path.exists(SCORE_FILE):
-        with open(SCORE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+    if os.getenv('RAILWAY_VOLUME_MOUNT_PATH'):
+        SCORE_FILE = os.path.join(os.getenv('RAILWAY_VOLUME_MOUNT_PATH'), 'scores.json')
+else:
+        SCORE_FILE = 'scores.json'  # 本地測試用
     return {}
 
 # 儲存成績資料
