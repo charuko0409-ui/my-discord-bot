@@ -55,7 +55,7 @@ async def on_ready():
         await asyncio.sleep(420)  # 7 min
 
 # ================== 你的 !prob 指令 ==================
-@bot.command(name='help')
+@bot.command(name='helpc')
 async def help_command(ctx):
     """顯示所有指令列表"""
     embed = discord.Embed(
