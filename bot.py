@@ -365,29 +365,6 @@ async def delete_score(ctx, player: str):
     else:
         await ctx.send(f"❌ `{player}` は見つかりません。")
 
-# 指令：顯示所有選手成績
-@bot.command(name='allscore')
-async def all_scores(ctx):
-    """顯示所有選手成績"""
-    scores = load_scores()
-    if not scores:
-        await ctx.send("📭 まだ成績は登録されていません。")
-        return
-    
-    # 排序後輸出
-    sorted_items = sorted(scores.items())
-    message = "**📊 選手成績一覧**\n"
-    for player, score in sorted_items:
-        message += f"• {player}: {score}\n"
-    
-    # 避免訊息過長（Discord 限制 2000 字）
-    if len(message) > 1900:
-        await ctx.send("⚠️ 選手が多すぎるため、一部のみ表示します。")
-        # 可以只顯示前 20 筆
-        message = "**📊 選手成績一覧（一部）**\n"
-        for player, score in sorted_items[:20]:
-            message += f"• {player}: {score}\n"
-    
-    await ctx.send(message)
+
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
