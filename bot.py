@@ -387,6 +387,35 @@ async def get_score(ctx, player: str):
     else:
         await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
 
-
+@bot.command(name='sadfeeder')
+async def sadfeeder(ctx):
+    """顯示 Sadfeeder 選手的介紹"""
+    embed = discord.Embed(
+        title="📊 TK Sadfeeder",
+        description="他是一位知名的《Shadowverse》（影之詩）國際選手，隸屬於 Twilight Knights (TK) 戰隊。",
+        color=0x00ff00
+    )
+    
+    embed.add_field(
+        name="🏆 主要成就",
+        value="他在 SVO（Shadowverse Open）等國際賽事中表現活躍，曾獲得 SVO SEAO Contender's Cup 冠軍，並取得了 WGP（World Grand Prix）2020 的參賽資格。",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🃏 賽場風格",
+        value="他是知名的多牌組專精選手。在 SVO All-Star 總決賽中，他使用了「進化控妖」、「土片法」和「棄牌龍」的組合，並最終贏得了冠軍。此外，他也以只用「皇家護衛」職業打上 Grand Master 階級而聞名。在SVWB，使用皇家，主教，復仇者三個職業分登頂。",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🏅 近期動態",
+        value="截至 2026 年，他依然活躍於頂級賽事，並在 SVO All-Star 總決賽這類大型比賽中奪冠。",
+        inline=False
+    )
+    
+    embed.set_footer(text="TK Sadfeeder | Shadowverse 國際選手")
+    
+    await ctx.send(embed=embed)
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
