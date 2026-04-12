@@ -387,6 +387,27 @@ async def get_score(ctx, player: str):
     else:
         await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
 
-
+# 指令：刪除所有選手成績
+@bot.command(name='clearallscore')
+@commands.has_permissions(administrator=True)
+async def clear_all_scores(ctx):
+    """刪除所有選手成績 用法: !clearallscore (管理員限定)"""
+    # 確認提示（避免誤刪）
+    confirm_msg = await ctx.send("⚠️ **本当にすべての選手成績を削除しますか？**\nこの操作は元に戻せません。\n削除する場合は `!confirm_clear` と入力してください。")
+    
+    def check(m):
+        return m.author == ctx.author and m.content == '!confirm_clear' and m.channel == ctx.channel
+    
+    try:
+        await bot.wait_for('message', timeout=30.0, check=check)
+        # 確認後執行刪除
+        scores = load_scores()
+        if scores:
+            save_scores({})  # 存空字典
+            await ctx.send("✅ **すべての選手成績を削除しました。**")
+        else:
+            await ctx.send("📭 すでに成績データは空です。")
+    except asyncio.TimeoutError:
+        await ctx.send("⏰ 時間切れです。コマンドをキャンセルしました。")
 
 bot.run(os.getenv('DISCORD_BOT_TOKEN'))
