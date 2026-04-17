@@ -105,11 +105,8 @@ def cumulative_prob(n: int, k: int, condition: str, p: float = 1/3) -> float:
 @bot.command(name='remindme')
 async def remind_me(ctx, *, arg: str):
     """設定提醒 用法: !remindme 10 min 吃飯"""
-    # 分割時間和訊息
-    # 先嘗試從開頭解析時間部分
     time_part = ""
     message_part = arg
-    # 常見時間關鍵字
     time_keywords = ['min', 'hour', 'day', '分', '小時', '時', '天', '日']
     words = arg.split()
     for i, word in enumerate(words):
@@ -132,35 +129,28 @@ async def remind_me(ctx, *, arg: str):
     if seconds <= 0:
         await ctx.send("❌ 時間必須大於 0")
         return
-    if seconds > 30 * 86400:  # 最長30天
+    if seconds > 30 * 86400:
         await ctx.send("❌ 時間太長了，最長30天")
         return
     
     from datetime import timezone, timedelta as td
-
-    # 定義 GMT+8 時區
     tz_gmt8 = timezone(td(hours=8))
     remind_time_local = datetime.now(tz_gmt8) + timedelta(seconds=seconds)
-
+    
     await ctx.send(f"✅ 設定提醒！會在 {remind_time_local.strftime('%Y-%m-%d %H:%M:%S')} (GMT+8) 私訊你：\n「{message_part}」")
     
-    # 建立非同步任務
     async def reminder_task():
         await asyncio.sleep(seconds)
         try:
-            # 嘗試私訊使用者
             user = ctx.author
-            await user.send(f"🔔 **提醒！**\n你設定的時間到了：\n「{message_part}」\n（設定於 {remind_time.strftime('%Y-%m-%d %H:%M:%S')} UTC）")
+            await user.send(f"🔔 **提醒！**\n你設定的時間到了：\n「{message_part}」\n（設定於 {remind_time_local.strftime('%Y-%m-%d %H:%M:%S')} GMT+8）")
         except discord.Forbidden:
-            # 如果使用者封鎖了機器人私訊或未開啟私訊
             await ctx.send(f"⚠️ {ctx.author.mention} 無法私訊你，請檢查隱私設定，允許伺服器成員私訊。")
         except Exception as e:
             print(f"提醒發送失敗: {e}")
+            await ctx.send(f"⚠️ 提醒發送失敗：{e}")
     
-    # 啟動任務
-    task = asyncio.create_task(reminder_task())
-    # 可選：儲存任務以便取消（但簡單實作不存檔）
-    # 如果需要重啟後恢復，需要將提醒存到 JSON 檔案，較複雜，先不實作
+    asyncio.create_task(reminder_task())
 
 @bot.command(name='prob')
 async def probability(ctx, *, arg: str):
