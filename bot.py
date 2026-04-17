@@ -136,11 +136,13 @@ async def remind_me(ctx, *, arg: str):
         await ctx.send("❌ 時間太長了，最長30天")
         return
     
-    # 計算提醒時間
-    remind_time = datetime.utcnow() + timedelta(seconds=seconds)
-    
-    # 回覆確認
-    await ctx.send(f"✅ 設定提醒！會在 {remind_time.strftime('%Y-%m-%d %H:%M:%S')} (UTC) 私訊你：\n「{message_part}」")
+    from datetime import timezone, timedelta as td
+
+    # 定義 GMT+8 時區
+    tz_gmt8 = timezone(td(hours=8))
+    remind_time_local = datetime.now(tz_gmt8) + timedelta(seconds=seconds)
+
+    await ctx.send(f"✅ 設定提醒！會在 {remind_time_local.strftime('%Y-%m-%d %H:%M:%S')} (GMT+8) 私訊你：\n「{message_part}」")
     
     # 建立非同步任務
     async def reminder_task():
