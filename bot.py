@@ -220,12 +220,19 @@ async def probability(ctx, *, arg: str):
     # 分數表示
     prob_frac = Fraction(prob_float).limit_denominator(10000)
     
+    if prob_float < 0.001:
+        prob_display = f"{prob_float:.8f}"
+        percent_display = f"{percent:.4f}%"
+    else:
+        prob_display = f"{prob_float:.4f}"
+        percent_display = f"{percent:.2f}%"
+
     response = (
         f"**X+Y+Z = {N} かつ {cond_str} の確率**\n"
         f"(毎回 X,Y,Z からランダムに選択、{N}回繰り返し)\n"
-        f"確率：`{prob_frac}` = `{prob_float:.4f}`（{percent:.2f}%）\n"
+        f"確率：`{prob_frac}` = `{prob_display}`（{percent_display}）\n"
     )
-    
+
     await ctx.send(response)
 
 async def show_table(ctx, n: int):
