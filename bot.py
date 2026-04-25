@@ -335,69 +335,7 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
     
     await ctx.send(response)
 
-# ================== 成績管理指令 ==================
-@bot.command(name='addscore')
-@commands.has_permissions(administrator=True)
-async def add_score(ctx, player: str, score: str):
-    scores = load_scores()
-    scores[player] = score
-    save_scores(scores)
-    await ctx.send(f"✅ `{player}` の成績を `{score}` に登録しました！")
 
-@bot.command(name='score', aliases=['search'])
-async def get_score(ctx, player: str):
-    scores = load_scores()
-    if player in scores:
-        await ctx.send(f"📊 `{player}` の成績: **{scores[player]}**")
-    else:
-        await ctx.send(f"❌ `{player}` の成績は見つかりませんでした。")
-
-@bot.command(name='allscore')
-async def all_scores(ctx):
-    scores = load_scores()
-    if not scores:
-        await ctx.send("📭 まだ成績は登録されていません。")
-        return
-    
-    def sort_key(item):
-        player, score = item
-        if '-' in score:
-            parts = score.split('-')
-            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-                wins = int(parts[0])
-                losses = int(parts[1])
-                return (-wins, losses)
-        return (float('inf'), score)
-    
-    sorted_items = sorted(scores.items(), key=sort_key)
-    message = "**📊 選手成績一覧（勝率順）**\n"
-    for player, score in sorted_items:
-        message += f"• {player}: {score}\n"
-        if len(message) > 1900:
-            await ctx.send("⚠️ 選手が多すぎるため、一部のみ表示します。")
-            break
-    await ctx.send(message)
-
-@bot.command(name='delscore')
-@commands.has_permissions(administrator=True)
-async def delete_score(ctx, player: str):
-    scores = load_scores()
-    if player in scores:
-        del scores[player]
-        save_scores(scores)
-        await ctx.send(f"🗑️ `{player}` の成績を削除しました。")
-    else:
-        await ctx.send(f"❌ `{player}` は見つかりません。")
-
-@bot.command(name='clearallscore')
-@commands.has_permissions(administrator=True)
-async def clear_all_scores(ctx):
-    scores = load_scores()
-    if scores:
-        save_scores({})
-        await ctx.send("✅ **すべての選手成績を削除しました。**")
-    else:
-        await ctx.send("📭 すでに成績データは空です。")
 
 @bot.command(name='helpc')
 async def help_command(ctx):
@@ -421,11 +359,7 @@ async def help_command(ctx):
         value="`!simulate N 条件 Z 回数`\n例: `!simulate 14 = 3 10000`",
         inline=False
     )
-    embed.add_field(
-        name="📊 成績管理",
-        value="`!score 選手名` `!addscore 選手名 成績` `!allscore` `!delscore` `!clearallscore`",
-        inline=False
-    )
+
     embed.set_footer(text="Shadowverse ダメージ計算用 | モデル: 逐次ランダム選択")
     await ctx.send(embed=embed)
 
