@@ -338,54 +338,46 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
 @bot.command(name='deckprob')
 async def deck_prob(ctx, x: int, y: int):
     """
-    計算牌組（40張）中，有 x 張關鍵牌，抽 y 張後「完全沒抽到關鍵牌」的機率。
+    計算牌組（40張）中，有 x 張關鍵牌，抽 y 張後，
+    抽到 0,1,2,...,x 張關鍵牌的機率表格。
     用法：!deckprob 3 17
     """
-    if x <= 0:
-        await ctx.send("❌ 關鍵牌張數必須大於 0")
+    if x <= 0 or x > 40:
+        await ctx.send("❌ 關鍵牌張數必須介於 1~40")
         return
-    if y < 0:
-        await ctx.send("❌ 抽牌數不能為負")
-        return
-    if x > 40:
-        await ctx.send("❌ 關鍵牌最多 40 張")
-        return
-    if y > 40:
-        await ctx.send("❌ 抽牌數不能超過 40")
-        return
-
-    non_key = 40 - x
-    if y > non_key:
-        prob_frac = Fraction(0, 1)
-        prob_float = 0.0
-        percent = 0.0
-        response = (
-            f"**40張牌組，關鍵牌 {x} 張，已抽 {y} 張**\n"
-            f"一張都沒抽到的機率：**0**（{percent:.2f}%）\n"
-            f"（非關鍵牌只有 {non_key} 張，因此必定抽到關鍵牌）"
-        )
-        await ctx.send(response)
+    if y < 0 or y > 40:
+        await ctx.send("❌ 抽牌數必須介於 0~40")
         return
 
     total_comb = math.comb(40, y)
-    favorable_comb = math.comb(non_key, y)
-    prob_frac = Fraction(favorable_comb, total_comb)
-    prob_float = float(prob_frac)
-    percent = prob_float * 100
+    non_key = 40 - x
+    k_min = max(0, y - non_key)
+    k_max = min(x, y)
 
-    if prob_float < 0.001:
-        prob_display = f"{prob_float:.6f}"
-        percent_display = f"{percent:.4f}%"
-    else:
-        prob_display = f"{prob_float:.4f}"
-        percent_display = f"{percent:.2f}%"
+    result = f"**40張牌組，關鍵牌 {x} 張，已抽 {y} 張**\n```\n"
+    result += "抽中關鍵牌數 │   機率    │  百分比\n"
+    result += "─────────────┼───────────┼─────────\n"
 
-    response = (
-        f"**40張牌組，關鍵牌 {x} 張，已抽 {y} 張**\n"
-        f"一張都沒抽到的機率：`{prob_frac}` = `{prob_display}`（{percent_display}）\n"
-        f"（至少抽到一張的機率：`{1-prob_float:.4f}` = `{100-percent:.2f}%`）"
-    )
-    await ctx.send(response)
+    for k in range(0, x + 1):
+        if k < k_min or k > k_max:
+            prob = 0.0
+        else:
+            prob = math.comb(x, k) * math.comb(non_key, y - k) / total_comb
+        percent = prob * 100
+        # 小機率顯示更多小數
+        if prob < 0.001:
+            prob_str = f"{prob:.6f}"
+            percent_str = f"{percent:.4f}"
+        else:
+            prob_str = f"{prob:.4f}"
+            percent_str = f"{percent:.2f}"
+        result += f"      {k}      │ {prob_str} │ {percent_str}%\n"
+
+    result += "```"
+    # 至少一張的機率
+    prob_at_least_one = 1 - (math.comb(non_key, y) / total_comb) if y <= non_key else 1.0
+    result += f"\n至少抽到一張的機率：`{prob_at_least_one:.4f}`（`{prob_at_least_one*100:.2f}%`）"
+    await ctx.send(result)
 
 @bot.command(name='helpc')
 async def help_command(ctx):
