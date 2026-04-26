@@ -377,6 +377,94 @@ async def deck_prob(ctx, x: int, y: int):
     result += f"\n少なくとも1枚引く確率：`{prob_at_least_one:.4f}`（`{prob_at_least_one*100:.2f}%`）"
     await ctx.send(result)
 
+@bot.command(name='multideck')
+async def multi_deck_table(ctx, ka: int, kb: int, n: int):
+    """
+    顯示兩種關鍵牌（各 ka, kb 張，0~3）在 40 張牌組中抽 n 張後的完整機率表格。
+    用法：!multideck 3 3 17
+    """
+    total = 40
+    if not (0 <= ka <= 3 and 0 <= kb <= 3):
+        await ctx.send("❌ 各キーカードの枚数は 0～3 の間で入力してください")
+        return
+    if ka + kb > total:
+        await ctx.send("❌ 兩種關鍵牌的總張數不能超過 40")
+        return
+    if n < 0 or n > total:
+        await ctx.send("❌ 引いた枚數は 0～40 の間で入力してください")
+        return
+
+    other = total - ka - kb
+    total_comb = math.comb(total, n)
+
+    result = f"**40枚山札、A:{ka}枚 B:{kb}枚、{n}枚引いた確率表**\n```\n"
+    # 表頭
+    header = "A\\B │"
+    for b in range(kb + 1):
+        header += f"  {b}  │"
+    result += header + "\n"
+    result += "─────┼" + "─────┼" * (kb + 1) + "\n"
+
+    for a in range(ka + 1):
+        row = f"  {a}   │"
+        for b in range(kb + 1):
+            c = n - a - b
+            if c < 0 or c > other:
+                prob = 0.0
+            else:
+                prob = (math.comb(ka, a) * math.comb(kb, b) * math.comb(other, c)) / total_comb
+            percent = prob * 100
+            if prob < 0.001:
+                row += f"{percent:.3f}%│"
+            else:
+                row += f"{percent:.2f}%│"
+        result += row + "\n"
+    result += "```\n（行＝A枚數，列＝B枚數）"
+    await ctx.send(result)
+
+@bot.command(name='multideck_prob')
+async def multi_deck_specific(ctx, ka: int, kb: int, n: int, a: int, b: int):
+    """
+    查詢特定組合的機率：A 抽中 a 張，B 抽中 b 張。
+    用法：!multideck_prob 3 3 17 1 2
+    """
+    total = 40
+    if not (0 <= ka <= 3 and 0 <= kb <= 3):
+        await ctx.send("❌ 各キーカードの枚数は 0～3 の間で入力してください")
+        return
+    if ka + kb > total:
+        await ctx.send("❌ 兩種關鍵牌的總張數不能超過 40")
+        return
+    if n < 0 or n > total:
+        await ctx.send("❌ 引いた枚數は 0～40 の間で入力してください")
+        return
+    if a < 0 or a > ka or b < 0 or b > kb:
+        await ctx.send(f"❌ Aは0～{ka}、Bは0～{kb}の範囲で入力してください")
+        return
+
+    c = n - a - b
+    other = total - ka - kb
+    if c < 0 or c > other:
+        prob = 0.0
+        await ctx.send(f"**組合せ不可能**（A={a}, B={b} のとき殘りカード {c} 枚、非キーカードは {other} 枚）")
+        return
+
+    prob = (math.comb(ka, a) * math.comb(kb, b) * math.comb(other, c)) / math.comb(total, n)
+    percent = prob * 100
+
+    if prob < 0.001:
+        prob_str = f"{prob:.6f}"
+        percent_str = f"{percent:.4f}%"
+    else:
+        prob_str = f"{prob:.4f}"
+        percent_str = f"{percent:.2f}%"
+
+    response = (
+        f"**40枚山札、A:{ka}枚 B:{kb}枚、{n}枚引いたとき**\n"
+        f"A={a}, B={b} となる確率：`{prob_str}`（{percent_str}）"
+    )
+    await ctx.send(response)
+
 @bot.command(name='helpc')
 async def help_command(ctx):
     embed = discord.Embed(
