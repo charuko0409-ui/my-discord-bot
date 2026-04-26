@@ -335,7 +335,57 @@ async def simulate(ctx, N: int, condition: str, Z: int, trials: int = 10000):
     
     await ctx.send(response)
 
+@bot.command(name='deckprob')
+async def deck_prob(ctx, x: int, y: int):
+    """
+    計算牌組（40張）中，有 x 張關鍵牌，抽 y 張後「完全沒抽到關鍵牌」的機率。
+    用法：!deckprob 3 17
+    """
+    if x <= 0:
+        await ctx.send("❌ 關鍵牌張數必須大於 0")
+        return
+    if y < 0:
+        await ctx.send("❌ 抽牌數不能為負")
+        return
+    if x > 40:
+        await ctx.send("❌ 關鍵牌最多 40 張")
+        return
+    if y > 40:
+        await ctx.send("❌ 抽牌數不能超過 40")
+        return
 
+    non_key = 40 - x
+    if y > non_key:
+        prob_frac = Fraction(0, 1)
+        prob_float = 0.0
+        percent = 0.0
+        response = (
+            f"**40張牌組，關鍵牌 {x} 張，已抽 {y} 張**\n"
+            f"一張都沒抽到的機率：**0**（{percent:.2f}%）\n"
+            f"（非關鍵牌只有 {non_key} 張，因此必定抽到關鍵牌）"
+        )
+        await ctx.send(response)
+        return
+
+    total_comb = math.comb(40, y)
+    favorable_comb = math.comb(non_key, y)
+    prob_frac = Fraction(favorable_comb, total_comb)
+    prob_float = float(prob_frac)
+    percent = prob_float * 100
+
+    if prob_float < 0.001:
+        prob_display = f"{prob_float:.6f}"
+        percent_display = f"{percent:.4f}%"
+    else:
+        prob_display = f"{prob_float:.4f}"
+        percent_display = f"{percent:.2f}%"
+
+    response = (
+        f"**40張牌組，關鍵牌 {x} 張，已抽 {y} 張**\n"
+        f"一張都沒抽到的機率：`{prob_frac}` = `{prob_display}`（{percent_display}）\n"
+        f"（至少抽到一張的機率：`{1-prob_float:.4f}` = `{100-percent:.2f}%`）"
+    )
+    await ctx.send(response)
 
 @bot.command(name='helpc')
 async def help_command(ctx):
