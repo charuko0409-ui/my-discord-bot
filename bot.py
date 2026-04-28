@@ -465,20 +465,21 @@ async def multi_deck_specific(ctx, ka: int, kb: int, n: int, a: int, b: int):
     )
     await ctx.send(response)
 @bot.command(name='midgame_effect')
-async def midgame_effect(ctx, composition: str, drawn_before: int, hand_size: int, repeat: int = 4, trials: int = 10000):
+async def midgame_effect(ctx, composition: str, drawn_before: int, hand_size: int, trials: int = 10000):
     """
-    模擬中期拍下複雜卡牌後，成功次數0~repeat的機率分佈。
+    模擬拍下1044後，成功次數 0~4 的機率分佈（效果固定重複 4 次）。
     參數：
-        composition : 牌組組成，格式 "費用:張數,費用:張數,..."  例如 "1:5,2:8,3:12,4:7,5:4,6+:4" (總張數須為40)
-        drawn_before: 拍這張卡之前已經抽/用掉的牌數（非負數，不超過40）
-        hand_size   : 每次發動效果時的手牌數（通常6）
-        repeat      : 效果重複次數（預設為4）
+        composition : 牌組組成，格式 "費用:張數,費用:張數,..." (總張數須為40)
+        drawn_before: 拍這張卡之前已經抽/用掉的牌數
+        hand_size   : 每次發動效果時的手牌數
         trials      : 模擬次數（預設10000）
-    範例：!midgame_effect "1:5,2:8,3:12,4:7,5:4,6+:4" 15 6 4 20000
+    範例：!midgame_effect "2:9,3:24,6:1,7:2,9:1,10:3" 18 8 20000
     """
     import random
     import time
     from collections import Counter
+
+    repeat = 4  # 固定效果重複次數
 
     # 解析牌組組成
     total_cards = 0
@@ -509,9 +510,6 @@ async def midgame_effect(ctx, composition: str, drawn_before: int, hand_size: in
         return
     if hand_size < 1 or hand_size > 40:
         await ctx.send("❌ 手牌數必須在1~40之間")
-        return
-    if repeat < 1 or repeat > 20:
-        await ctx.send("❌ 效果重複次數建議在1~20之間")
         return
     if trials < 100:
         trials = 100
@@ -559,7 +557,7 @@ async def midgame_effect(ctx, composition: str, drawn_before: int, hand_size: in
     elapsed = time.time() - start_time
 
     # 輸出結果表格（全繁體中文）
-    results = f"**中期拍卡模擬 (已抽 {drawn_before} 張, 手牌 {hand_size} 張, 效果重複 {repeat} 次, 模擬 {trials:,} 次)**\n"
+    results = f"**驗牌模擬 (已抽 {drawn_before} 張, 手牌 {hand_size} 張, 效果重複 {repeat} 次, 模擬 {trials:,} 次)**\n"
     results += "```\n"
     results += "成功次數 │   機率    │  百分比\n"
     results += "─────────┼───────────┼─────────\n"
