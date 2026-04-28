@@ -464,7 +464,118 @@ async def multi_deck_specific(ctx, ka: int, kb: int, n: int, a: int, b: int):
         f"A={a}, B={b} となる確率：`{prob_str}`（{percent_str}）"
     )
     await ctx.send(response)
+@bot.command(name='midgame_effect')
+async def midgame_effect(ctx, composition: str, drawn_before: int, hand_size: int, repeat: int = 4, trials: int = 10000):
+    """
+    模擬中期拍下複雜卡牌後，成功次數0~repeat的機率分佈。
+    參數：
+        composition : 牌組組成，格式 "費用:張數,費用:張數,..."  例如 "1:5,2:8,3:12,4:7,5:4,6+:4" (總張數須為40)
+        drawn_before: 拍這張卡之前已經抽/用掉的牌數（非負數，不超過40）
+        hand_size   : 每次發動效果時的手牌數（通常6）
+        repeat      : 效果重複次數（預設為4）
+        trials      : 模擬次數（預設10000）
+    範例：!midgame_effect "1:5,2:8,3:12,4:7,5:4,6+:4" 15 6 4 20000
+    """
+    import random
+    import time
+    from collections import Counter
 
+    # 解析牌組組成
+    total_cards = 0
+    card_pool = []
+    parts = composition.split(',')
+    for part in parts:
+        part = part.strip()
+        if ':' not in part:
+            await ctx.send("❌ 格式錯誤，請使用 '費用:張數' 並用逗號分隔")
+            return
+        cost_str, count_str = part.split(':')
+        if cost_str.endswith('+'):
+            cost = int(cost_str[:-1])
+        else:
+            cost = int(cost_str)
+        count = int(count_str)
+        if count < 0:
+            await ctx.send("❌ 張數不能為負數")
+            return
+        card_pool.extend([cost] * count)
+        total_cards += count
+
+    if total_cards != 40:
+        await ctx.send(f"❌ 牌組總張數應為40，目前為{total_cards}張")
+        return
+    if drawn_before < 0 or drawn_before > 40:
+        await ctx.send("❌ 已抽牌數必須在0~40之間")
+        return
+    if hand_size < 1 or hand_size > 40:
+        await ctx.send("❌ 手牌數必須在1~40之間")
+        return
+    if repeat < 1 or repeat > 20:
+        await ctx.send("❌ 效果重複次數建議在1~20之間")
+        return
+    if trials < 100:
+        trials = 100
+    if trials > 200000:
+        trials = 200000
+
+    # 模擬主迴圈
+    success_counts = [0] * (repeat + 1)
+    start_time = time.time()
+
+    for _ in range(trials):
+        # 1. 複製原始牌組並隨機移除 drawn_before 張（前期消耗）
+        current_pool = card_pool.copy()
+        random.shuffle(current_pool)
+        if drawn_before > 0:
+            current_pool = current_pool[drawn_before:]
+
+        # 2. 起始手牌：從剩餘牌堆中抽 hand_size 張（無放回）
+        if len(current_pool) < hand_size:
+            continue
+        hand = random.sample(current_pool, hand_size)
+        for card in hand:
+            current_pool.remove(card)
+
+        # 3. 重複 repeat 次效果
+        success_this_trial = 0
+        for _ in range(repeat):
+            # 將手牌全部放回牌堆（放回後洗勻牌堆）
+            current_pool.extend(hand)
+            random.shuffle(current_pool)
+            # 重新抽 hand_size 張作為新手牌
+            if len(current_pool) < hand_size:
+                break
+            hand = random.sample(current_pool, hand_size)
+            for card in hand:
+                current_pool.remove(card)
+
+            # 檢查新手牌中是否有費用出現次數 ≥4
+            cost_counter = Counter(hand)
+            if any(v >= 4 for v in cost_counter.values()):
+                success_this_trial += 1
+
+        success_counts[success_this_trial] += 1
+
+    elapsed = time.time() - start_time
+
+    # 輸出結果表格（全繁體中文）
+    results = f"**中期拍卡模擬 (已抽 {drawn_before} 張, 手牌 {hand_size} 張, 效果重複 {repeat} 次, 模擬 {trials:,} 次)**\n"
+    results += "```\n"
+    results += "成功次數 │   機率    │  百分比\n"
+    results += "─────────┼───────────┼─────────\n"
+    for k in range(repeat + 1):
+        prob = success_counts[k] / trials
+        percent = prob * 100
+        if prob < 0.001:
+            prob_str = f"{prob:.6f}"
+            percent_str = f"{percent:.4f}"
+        else:
+            prob_str = f"{prob:.4f}"
+            percent_str = f"{percent:.2f}"
+        results += f"    {k}     │ {prob_str} │ {percent_str}%\n"
+    results += "```\n"
+    results += f"⏱️ 處理時間：{elapsed:.2f} 秒"
+    await ctx.send(results)
 @bot.command(name='helpc')
 async def help_command(ctx):
     embed = discord.Embed(
